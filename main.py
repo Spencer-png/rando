@@ -7,24 +7,26 @@ import logging
 from dotenv import load_dotenv
 
 # Load environment variables from a .env file for local development.
-# This line is not strictly necessary for Render but is good practice.
 load_dotenv() 
 
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 # For production, it's better to restrict origins to your specific frontend URL
-# Example: CORS(app, origins=["https://your-frontend-app.onrender.com"])
 CORS(app, origins="*")
 
 @app.before_request
 def log_request_info():
     """Logs information about each incoming request."""
-    # Consider reducing log verbosity in a high-traffic production environment.
     app.logger.info('Request Path: %s', request.path)
     app.logger.info('Request Method: %s', request.method)
-    if request.data:
-        app.logger.info('Request Body: %s', request.data.decode('utf-8'))
+
+# --- NEW: Root Route ---
+# This route will handle requests to the base URL (e.g., from browser checks or health checks)
+@app.route('/', methods=['GET', 'HEAD'])
+def root():
+    return jsonify({"status": "ok", "message": "AI Proxy Backend is running."})
+
 
 @app.route('/api/gemini', methods=['POST'])
 def proxy_gemini():
@@ -34,9 +36,6 @@ def proxy_gemini():
     try:
         data = request.get_json()
         
-        # --- CORRECT: Load keys securely from an environment variable ---
-        # In Render, you will set an environment variable named GEMINI_API_KEYS
-        # with your comma-separated keys.
         api_keys_string = os.environ.get("GEMINI_API_KEYS")
         if not api_keys_string:
             app.logger.error("GEMINI_API_KEYS environment variable not set on the server.")
@@ -74,7 +73,6 @@ def proxy_claude():
     """ Proxies requests to the Anthropic Claude API. """
     try:
         data = request.get_json()
-        # Load key from environment variable
         api_key = os.environ.get("CLAUDE_API_KEY", 'sk-ant-api03-YOUR_CLAUDE_KEY_HERE')
         
         if 'YOUR_CLAUDE_KEY_HERE' in api_key:
@@ -105,7 +103,6 @@ def proxy_openai():
     """ Proxies requests to the OpenAI API. """
     try:
         data = request.get_json()
-        # Load key from environment variable
         api_key = os.environ.get("OPENAI_API_KEY", 'sk-proj-YOUR_OPENAI_KEY_HERE')
         
         if 'YOUR_OPENAI_KEY_HERE' in api_key:
