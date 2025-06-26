@@ -44,7 +44,7 @@ def proxy_gemini():
         api_keys = [key.strip() for key in api_keys_string.split(',')]
 
         for api_key in api_keys:
-            api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flask:generateContent?key={api_key}"
+            api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
             app.logger.info(f"Attempting request to Gemini with key ending in ...{api_key[-4:]}")
             
             response = requests.post(api_url, json=data, headers={'Content-Type': 'application/json'})
